@@ -1,6 +1,6 @@
 # Figma MCP Server
 
-Model Context Protocol server implementation for Figma API. This server provides a standardized interface to interact with the Figma API using the Model Context Protocol.
+A Model Context Protocol server implementation for interfacing with the Figma API.
 
 ## Setup
 
@@ -9,9 +9,9 @@ Model Context Protocol server implementation for Figma API. This server provides
 npm install
 ```
 
-2. Create a `.env` file with your Figma access token:
-```
-FIGMA_ACCESS_TOKEN=your_figma_access_token
+2. Create a `.env` file based on `.env.example` and add your Figma access token:
+```bash
+cp .env.example .env
 ```
 
 3. Build the project:
@@ -26,11 +26,11 @@ npm start
 
 ## Development
 
-Run in development mode with automatic recompilation:
+For development with hot reloading:
 ```bash
 npm run dev
 ```
 
-## License
+## Environment Variables
 
-MIT
+- `FIGMA_ACCESS_TOKEN`: Your Figma API access token
