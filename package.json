@@ -1,35 +1,35 @@
 {
   "name": "figma-mcp-server",
   "version": "1.0.0",
-  "description": "Model Context Protocol server for Figma API",
+  "description": "MCP server implementation for Figma API",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "node --loader ts-node/esm src/index.ts",
-    "test": "node --loader ts-node/esm tests/api.test.ts",
-    "test:watch": "nodemon --exec node --loader ts-node/esm tests/api.test.ts",
-    "examples": "node --loader ts-node/esm tests/examples.ts"
+    "dev": "ts-node-esm src/index.ts",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.4",
-    "axios": "^1.6.2",
-    "dotenv": "^16.3.1"
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.22.4",
+    "node-fetch": "^3.3.2",
+    "debug": "^4.3.4"
   },
   "devDependencies": {
-    "@types/node": "^20.10.4",
-    "ts-node": "^10.9.1",
+    "@types/debug": "^4.1.12",
+    "@types/node": "^20.11.0",
+    "@types/jest": "^29.5.11",
+    "@typescript-eslint/eslint-plugin": "^6.18.1",
+    "@typescript-eslint/parser": "^6.18.1",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
     "typescript": "^5.3.3",
-    "nodemon": "^3.0.2"
+    "ts-node": "^10.9.2"
   },
-  "overrides": {
-    "glob": "^9.0.0",
-    "rimraf": "^5.0.0"
-  },
-  "resolutions": {
-    "glob": "^9.0.0",
-    "rimraf": "^5.0.0",
-    "inflight": "^2.0.0"
+  "engines": {
+    "node": ">=18"
   }
 }
