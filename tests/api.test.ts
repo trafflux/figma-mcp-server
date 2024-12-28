@@ -1,96 +1,67 @@
-import axios from 'axios';
-import dotenv from 'dotenv';
-import { FigmaAPIServer } from '../src/index.js';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { FigmaResourceHandler } from '../src/handlers/figma.js';
 
-dotenv.config();
+describe('Figma MCP Server', () => {
+  let server: Server;
+  let client: Client;
+  let handler: FigmaResourceHandler;
 
-async function testFigmaConnection() {
-    const figmaToken = process.env.FIGMA_ACCESS_TOKEN;
-    if (!figmaToken) {
-        throw new Error('FIGMA_ACCESS_TOKEN environment variable is required');
-    }
+  beforeAll(async () => {
+    // Setup server
+    handler = new FigmaResourceHandler('mock-token');
+    server = new Server(
+      { name: 'test-server', version: '1.0.0' },
+      { capabilities: { resources: {} } }
+    );
 
-    try {
-        // Test basic API connection
-        const response = await axios.get('https://api.figma.com/v1/me', {
-            headers: {
-                'Authorization': `Bearer ${figmaToken}`
-            }
-        });
-        console.log('✓ Successfully connected to Figma API');
-        console.log('User info:', response.data);
-        return true;
-    } catch (error: any) {
-        console.error('× Failed to connect to Figma API:', error.message);
-        return false;
-    }
-}
-
-async function testVariableOperations(fileId: string) {
-    const figmaToken = process.env.FIGMA_ACCESS_TOKEN;
-    if (!figmaToken) {
-        throw new Error('FIGMA_ACCESS_TOKEN environment variable is required');
-    }
-
-    try {
-        // Test getting variable collections
-        const collectionsResponse = await axios.get(
-            `https://api.figma.com/v1/files/${fileId}/variable_collections`,
-            {
-                headers: {
-                    'Authorization': `Bearer ${figmaToken}`
-                }
-            }
-        );
-        console.log('✓ Successfully retrieved variable collections');
-        console.log('Collections:', collectionsResponse.data);
-
-        // Test getting variables
-        const variablesResponse = await axios.get(
-            `https://api.figma.com/v1/files/${fileId}/variables`,
-            {
-                headers: {
-                    'Authorization': `Bearer ${figmaToken}`
-                }
-            }
-        );
-        console.log('✓ Successfully retrieved variables');
-        console.log('Variables:', variablesResponse.data);
-
-        return true;
-    } catch (error: any) {
-        console.error('× Failed to test variable operations:', error.message);
-        return false;
-    }
-}
-
-// Run tests
-async function runTests() {
-    console.log('Starting Figma API tests...\n');
-
-    try {
-        // Test 1: Basic API Connection
-        console.log('Test 1: Basic API Connection');
-        const connectionSuccess = await testFigmaConnection();
-        
-        if (connectionSuccess && process.env.FIGMA_FILE_ID) {
-            // Test 2: Variable Operations
-            console.log('\nTest 2: Variable Operations');
-            await testVariableOperations(process.env.FIGMA_FILE_ID);
-        } else {
-            console.log('\nSkipping variable operations test - No file ID provided');
-            console.log('Set FIGMA_FILE_ID in your .env file to test variable operations');
-        }
-    } catch (error: any) {
-        console.error('Test execution failed:', error.message);
-        process.exit(1);
-    }
-}
-
-// Only run tests if this file is being run directly
-if (import.meta.url.endsWith('/api.test.ts')) {
-    runTests().catch((error) => {
-        console.error('Unhandled error:', error);
-        process.exit(1);
+    // Register handlers
+    server.setRequestHandler('resources/list', async () => {
+      const resources = await handler.list();
+      return { resources };
     });
-}
+
+    server.setRequestHandler('resources/read', async (request) => {
+      const contents = await handler.read(request.params.uri);
+      return { contents };
+    });
+
+    // Setup client
+    client = new Client(
+      { name: 'test-client', version: '1.0.0' },
+      { capabilities: {} }
+    );
+  });
+
+  describe('Resource Listing', () => {
+    it('should list available resources', async () => {
+      const response = await client.request(
+        { method: 'resources/list' }
+      );
+
+      expect(response).toHaveProperty('resources');
+      expect(Array.isArray(response.resources)).toBe(true);
+    });
+  });
+
+  describe('Resource Reading', () => {
+    it('should read file contents', async () => {
+      const response = await client.request({
+        method: 'resources/read',
+        params: { uri: 'figma:///file/mock-key' }
+      });
+
+      expect(response).toHaveProperty('contents');
+      expect(Array.isArray(response.contents)).toBe(true);
+    });
+
+    it('should handle invalid URIs', async () => {
+      await expect(
+        client.request({
+          method: 'resources/read',
+          params: { uri: 'invalid-uri' }
+        })
+      ).rejects.toThrow();
+    });
+  });
+});
