@@ -1,8 +1,6 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import axios from 'axios';
 import dotenv from 'dotenv';
-import { FigmaAPIServer } from '../src/index';
+import { FigmaAPIServer } from '../src/index.js';
 
 dotenv.config();
 
@@ -22,7 +20,7 @@ async function testFigmaConnection() {
         console.log('✓ Successfully connected to Figma API');
         console.log('User info:', response.data);
         return true;
-    } catch (error) {
+    } catch (error: any) {
         console.error('× Failed to connect to Figma API:', error.message);
         return false;
     }
@@ -60,7 +58,7 @@ async function testVariableOperations(fileId: string) {
         console.log('Variables:', variablesResponse.data);
 
         return true;
-    } catch (error) {
+    } catch (error: any) {
         console.error('× Failed to test variable operations:', error.message);
         return false;
     }
@@ -70,16 +68,29 @@ async function testVariableOperations(fileId: string) {
 async function runTests() {
     console.log('Starting Figma API tests...\n');
 
-    // Test 1: Basic API Connection
-    console.log('Test 1: Basic API Connection');
-    const connectionSuccess = await testFigmaConnection();
-    
-    if (connectionSuccess) {
-        // Test 2: Variable Operations (requires a file ID)
-        console.log('\nTest 2: Variable Operations');
-        console.log('Please provide a Figma file ID to test variable operations.');
-        console.log('You can get this from any Figma file URL: figma.com/file/[FILE_ID]/...');
+    try {
+        // Test 1: Basic API Connection
+        console.log('Test 1: Basic API Connection');
+        const connectionSuccess = await testFigmaConnection();
+        
+        if (connectionSuccess && process.env.FIGMA_FILE_ID) {
+            // Test 2: Variable Operations
+            console.log('\nTest 2: Variable Operations');
+            await testVariableOperations(process.env.FIGMA_FILE_ID);
+        } else {
+            console.log('\nSkipping variable operations test - No file ID provided');
+            console.log('Set FIGMA_FILE_ID in your .env file to test variable operations');
+        }
+    } catch (error: any) {
+        console.error('Test execution failed:', error.message);
+        process.exit(1);
     }
 }
 
-runTests().catch(console.error);
+// Only run tests if this file is being run directly
+if (import.meta.url.endsWith('/api.test.ts')) {
+    runTests().catch((error) => {
+        console.error('Unhandled error:', error);
+        process.exit(1);
+    });
+}
