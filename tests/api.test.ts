@@ -2,9 +2,9 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { FigmaResourceHandler } from '../src/handlers/figma.js';
 import {
-  ListResourcesRequestSchema,
+  ListResourcesHandlerSchema,
   ListResourcesResponseSchema,
-  ReadResourceRequestSchema,
+  ReadResourceHandlerSchema,
   ReadResourceResponseSchema
 } from '../src/schemas.js';
 
@@ -22,12 +22,12 @@ describe('Figma MCP Server', () => {
     );
 
     // Register handlers
-    server.setRequestHandler(ListResourcesRequestSchema, async () => {
+    server.setRequestHandler(ListResourcesHandlerSchema, async () => {
       const resources = await handler.list();
       return { resources };
     });
 
-    server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+    server.setRequestHandler(ReadResourceHandlerSchema, async (request) => {
       const contents = await handler.read(request.params.uri);
       return { contents };
     });
@@ -37,12 +37,18 @@ describe('Figma MCP Server', () => {
       { name: 'test-client', version: '1.0.0' },
       { capabilities: {} }
     );
+
+    // Connect client to server
+    await client.connect();
   });
 
   describe('Resource Listing', () => {
     it('should list available resources', async () => {
       const response = await client.request(
-        { method: 'resources/list' },
+        { 
+          jsonrpc: '2.0',
+          method: 'resources/list'
+        },
         ListResourcesResponseSchema
       );
 
@@ -55,6 +61,7 @@ describe('Figma MCP Server', () => {
     it('should read file contents', async () => {
       const response = await client.request(
         {
+          jsonrpc: '2.0',
           method: 'resources/read',
           params: { uri: 'figma:///file/mock-key' }
         },
@@ -69,6 +76,7 @@ describe('Figma MCP Server', () => {
       await expect(
         client.request(
           {
+            jsonrpc: '2.0',
             method: 'resources/read',
             params: { uri: 'invalid-uri' }
           },
