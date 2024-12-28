@@ -1,160 +1,150 @@
 # Figma MCP Server
 
-A Model Context Protocol server that interfaces with the Figma API, providing a comprehensive interface for managing Figma variables, components, and other design system elements.
+A TypeScript server implementing the [Model Context Protocol (MCP)](https://modelcontextprotocol.io) for the Figma API, enabling standardized context provision for LLMs.
 
-## Features
+## Overview
 
-### Variable Management
-- Create, read, update, and delete variables
-- Variable type validation
-- Batch operations for efficient updates
-- Support for variable modes and scopes
-- Comprehensive variable validation
+This server provides MCP-compliant access to Figma resources, allowing LLM applications to seamlessly integrate with Figma files, components, and variables. It implements the full MCP specification while providing specialized handlers for Figma's unique resource types.
 
-### File Operations
-- File content retrieval
-- Export capabilities
-- Version history access
+### Key Features
 
-### Components and Styles
-- Component management
-- Style operations
-- Team component library access
+- **MCP Resource Handlers**
+  - Figma files access and manipulation
+  - Variables and components management
+  - Custom URI scheme (figma:///)
+  
+- **Robust Implementation**
+  - Type-safe implementation using TypeScript
+  - Request validation using Zod schemas
+  - Comprehensive error handling
+  - Token validation and API integration
+  - Batch operations support
 
-### Collaboration
-- Comment creation and retrieval
-- File collaboration features
+## Project Structure
+
+```
+figma-mcp-server/
+├── src/
+│   ├── index.ts         # Main server implementation
+│   ├── types.ts         # TypeScript types & interfaces
+│   ├── schemas.ts       # Zod validation schemas
+│   ├── errors.ts        # Error handling
+│   └── middleware/      # Server middleware
+├── tests/
+│   └── api.test.ts      # API tests
+└── package.json
+```
 
 ## Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/TimHolden/figma-mcp-server.git
-cd figma-mcp-server
-
-# Install dependencies
+npm install @modelcontextprotocol/sdk
 npm install
-
-# Build the project
-npm run build
 ```
 
 ## Configuration
 
-1. Copy the environment template:
-```bash
-cp .env.example .env
-```
+1. Set up your Figma access token:
+   ```bash
+   export FIGMA_ACCESS_TOKEN=your_access_token
+   ```
 
-2. Edit `.env` and add your Figma access token:
-```env
-FIGMA_ACCESS_TOKEN=your_access_token_here
-FIGMA_FILE_ID=optional_file_id_for_testing
-```
+2. Configure the server (optional):
+   ```bash
+   export MCP_SERVER_PORT=3000
+   ```
 
 ## Usage
 
 ### Starting the Server
+
 ```bash
-npm start
+npm run start
 ```
 
-For development with auto-reload:
+### Client Integration
+
+```typescript
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+
+const transport = new StdioClientTransport({
+  command: "path/to/figma-mcp-server",
+});
+
+const client = new Client({
+  name: "figma-client",
+  version: "1.0.0",
+}, {
+  capabilities: {}
+});
+
+await client.connect(transport);
+
+// List available Figma resources
+const resources = await client.request(
+  { method: "resources/list" },
+  ListResourcesResultSchema
+);
+
+// Read a specific Figma file
+const fileContent = await client.request(
+  {
+    method: "resources/read",
+    params: {
+      uri: "figma:///file/key"
+    }
+  },
+  ReadResourceResultSchema
+);
+```
+
+## Resource URIs
+
+The server implements a custom `figma:///` URI scheme for accessing Figma resources:
+
+- Files: `figma:///file/{file_key}`
+- Components: `figma:///component/{file_key}/{component_id}`
+- Variables: `figma:///variable/{file_key}/{variable_id}`
+
+## Development
+
+### Setting Up Development Environment
+
 ```bash
-npm run dev
+npm install
+npm run build
 ```
 
 ### Running Tests
+
 ```bash
-# Run API connection tests
 npm test
-
-# Run with auto-reload
-npm run test:watch
-
-# Run usage examples
-npm run examples
 ```
 
-### Variable Operations
+### Contributing
 
-```typescript
-// Create a variable with validation
-await server.handleRequest({
-    method: 'figma/variables/create',
-    params: {
-        fileId: 'your_file_id',
-        name: 'Primary Color',
-        resolvedType: 'COLOR',
-        value: '#007AFF',
-        validation: {
-            type: 'COLOR'
-        }
-    }
-});
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-// Batch create variables
-await server.handleRequest({
-    method: 'figma/variables/batch/create',
-    params: {
-        fileId: 'your_file_id',
-        variables: [
-            { 
-                name: 'Spacing/Small',
-                resolvedType: 'FLOAT',
-                value: 8,
-                validation: { type: 'FLOAT', min: 0, max: 100 }
-            },
-            // ... more variables
-        ]
-    }
-});
-```
+## Roadmap
 
-### Variable Modes
-
-```typescript
-// Create a new mode
-await server.handleRequest({
-    method: 'figma/variables/modes/create',
-    params: {
-        fileId: 'your_file_id',
-        collectionId: 'collection_id',
-        name: 'Dark Mode',
-        variableValues: {
-            'Primary Color': '#0A84FF'
-        }
-    }
-});
-```
-
-## API Reference
-
-### Variable Management
-- `figma/variables/collections` - Get all variable collections
-- `figma/variables/get` - Get variables in a file
-- `figma/variables/create` - Create a variable with validation
-- `figma/variables/batch/create` - Batch create variables
-- `figma/variables/modes/create` - Create a variable mode
-- `figma/variables/modes/update` - Update a variable mode
-
-### File Operations
-- `figma/files/get` - Get file content
-- `figma/files/export` - Export file content
-- `figma/files/versions` - Get file versions
-
-### Components
-- `figma/components/get` - Get component information
-- `figma/team/components` - Get team components
-
-### Comments
-- `figma/comments/get` - Get file comments
-- `figma/comments/post` - Create a comment
-
-## Contributing
-
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+- [ ] Implement comprehensive test suite
+- [ ] Add support for more Figma API endpoints
+- [ ] Implement caching layer
+- [ ] Add rate limiting
+- [ ] Enhance documentation
+- [ ] Set up CI/CD pipeline
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Related Resources
+
+- [Model Context Protocol Documentation](https://modelcontextprotocol.io)
+- [MCP Specification](https://spec.modelcontextprotocol.io)
+- [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
