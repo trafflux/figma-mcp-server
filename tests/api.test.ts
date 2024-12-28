@@ -1,6 +1,12 @@
+import { z } from 'zod';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { FigmaResourceHandler } from '../src/handlers/figma.js';
+import {
+  ListResourcesResponseSchema,
+  ReadResourceRequestSchema,
+  ResourceSchema
+} from '../src/schemas.js';
 
 describe('Figma MCP Server', () => {
   let server: Server;
@@ -16,12 +22,17 @@ describe('Figma MCP Server', () => {
     );
 
     // Register handlers
-    server.setRequestHandler('resources/list', async () => {
+    server.setRequestHandler(z.object({
+      method: z.literal('resources/list')
+    }), async () => {
       const resources = await handler.list();
       return { resources };
     });
 
-    server.setRequestHandler('resources/read', async (request) => {
+    server.setRequestHandler(z.object({
+      method: z.literal('resources/read'),
+      params: ReadResourceRequestSchema
+    }), async (request) => {
       const contents = await handler.read(request.params.uri);
       return { contents };
     });
@@ -36,20 +47,33 @@ describe('Figma MCP Server', () => {
   describe('Resource Listing', () => {
     it('should list available resources', async () => {
       const response = await client.request(
-        { method: 'resources/list' }
+        { method: 'resources/list' },
+        ListResourcesResponseSchema
       );
 
       expect(response).toHaveProperty('resources');
       expect(Array.isArray(response.resources)).toBe(true);
+      response.resources.forEach(resource => {
+        expect(() => ResourceSchema.parse(resource)).not.toThrow();
+      });
     });
   });
 
   describe('Resource Reading', () => {
     it('should read file contents', async () => {
-      const response = await client.request({
-        method: 'resources/read',
-        params: { uri: 'figma:///file/mock-key' }
-      });
+      const response = await client.request(
+        {
+          method: 'resources/read',
+          params: { uri: 'figma:///file/mock-key' }
+        },
+        z.object({
+          contents: z.array(z.object({
+            uri: z.string(),
+            mimeType: z.string(),
+            text: z.string()
+          }))
+        })
+      );
 
       expect(response).toHaveProperty('contents');
       expect(Array.isArray(response.contents)).toBe(true);
@@ -57,10 +81,19 @@ describe('Figma MCP Server', () => {
 
     it('should handle invalid URIs', async () => {
       await expect(
-        client.request({
-          method: 'resources/read',
-          params: { uri: 'invalid-uri' }
-        })
+        client.request(
+          {
+            method: 'resources/read',
+            params: { uri: 'invalid-uri' }
+          },
+          z.object({
+            contents: z.array(z.object({
+              uri: z.string(),
+              mimeType: z.string(),
+              text: z.string()
+            }))
+          })
+        )
       ).rejects.toThrow();
     });
   });
