@@ -1,122 +1,159 @@
 # Figma MCP Server
 
-A Model Context Protocol server implementation for interfacing with the Figma API.
+A Model Context Protocol server that interfaces with the Figma API, providing a comprehensive interface for managing Figma variables, components, and other design system elements.
 
 ## Features
 
-### File Operations
-- Get file information and content
-- Export files to various formats
-- Get file version history
-- Get and post comments
-
 ### Variable Management
-- Read variable collections and variables
-- Create new variables and collections
-- Update existing variables
-- Delete variables and collections
-- Manage variable modes
+- Create, read, update, and delete variables
+- Variable type validation
+- Batch operations for efficient updates
+- Support for variable modes and scopes
+- Comprehensive variable validation
+
+### File Operations
+- File content retrieval
+- Export capabilities
+- Version history access
 
 ### Components and Styles
-- Get component information
-- List team components
-- Access style information
+- Component management
+- Style operations
+- Team component library access
+
+### Collaboration
+- Comment creation and retrieval
+- File collaboration features
 
 ## Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/TimHolden/figma-mcp-server.git
+cd figma-mcp-server
+
+# Install dependencies
 npm install
+
+# Build the project
+npm run build
 ```
 
 ## Configuration
 
-Copy `.env.example` to `.env` and add your Figma API token:
-
+1. Copy the environment template:
 ```bash
 cp .env.example .env
 ```
 
-Then edit `.env` and add your Figma API token.
-
-## Usage Examples
-
-### Variables
-
-1. Read Variables:
-```typescript
-// Get all variable collections
-const collections = await client.request("figma/variables/collections", { 
-    fileId: "your_file_id" 
-});
-
-// Get all variables in a file
-const variables = await client.request("figma/variables/get", { 
-    fileId: "your_file_id" 
-});
+2. Edit `.env` and add your Figma access token:
+```env
+FIGMA_ACCESS_TOKEN=your_access_token_here
+FIGMA_FILE_ID=optional_file_id_for_testing
 ```
 
-2. Create Variables:
-```typescript
-// Create a variable collection
-const collection = await client.request("figma/variables/collections/create", {
-    fileId: "your_file_id",
-    name: "My Colors",
-    variableIds: []
-});
+## Usage
 
-// Create a variable
-const variable = await client.request("figma/variables/create", {
-    fileId: "your_file_id",
-    collectionId: collection.id,
-    name: "Primary Color",
-    resolvedType: "COLOR",
-    value: "#0066FF"
-});
-```
-
-3. Update Variables:
-```typescript
-await client.request("figma/variables/update", {
-    fileId: "your_file_id",
-    variableId: "123",
-    value: "#FF0000",
-    name: "New Name" // optional
-});
-```
-
-### Files
-
-```typescript
-// Get file information
-const fileInfo = await client.request("figma/files/get", { 
-    fileId: "your_file_id" 
-});
-
-// Export file
-const exportInfo = await client.request("figma/files/export", {
-    fileId: "your_file_id",
-    format: "png",
-    scale: 2
-});
-```
-
-## Building
-
-```bash
-npm run build
-```
-
-## Running
-
+### Starting the Server
 ```bash
 npm start
 ```
 
-## Development
-
+For development with auto-reload:
 ```bash
 npm run dev
 ```
+
+### Running Tests
+```bash
+# Run API connection tests
+npm test
+
+# Run with auto-reload
+npm run test:watch
+
+# Run usage examples
+npm run examples
+```
+
+### Variable Operations
+
+```typescript
+// Create a variable with validation
+await server.handleRequest({
+    method: 'figma/variables/create',
+    params: {
+        fileId: 'your_file_id',
+        name: 'Primary Color',
+        resolvedType: 'COLOR',
+        value: '#007AFF',
+        validation: {
+            type: 'COLOR'
+        }
+    }
+});
+
+// Batch create variables
+await server.handleRequest({
+    method: 'figma/variables/batch/create',
+    params: {
+        fileId: 'your_file_id',
+        variables: [
+            { 
+                name: 'Spacing/Small',
+                resolvedType: 'FLOAT',
+                value: 8,
+                validation: { type: 'FLOAT', min: 0, max: 100 }
+            },
+            // ... more variables
+        ]
+    }
+});
+```
+
+### Variable Modes
+
+```typescript
+// Create a new mode
+await server.handleRequest({
+    method: 'figma/variables/modes/create',
+    params: {
+        fileId: 'your_file_id',
+        collectionId: 'collection_id',
+        name: 'Dark Mode',
+        variableValues: {
+            'Primary Color': '#0A84FF'
+        }
+    }
+});
+```
+
+## API Reference
+
+### Variable Management
+- `figma/variables/collections` - Get all variable collections
+- `figma/variables/get` - Get variables in a file
+- `figma/variables/create` - Create a variable with validation
+- `figma/variables/batch/create` - Batch create variables
+- `figma/variables/modes/create` - Create a variable mode
+- `figma/variables/modes/update` - Update a variable mode
+
+### File Operations
+- `figma/files/get` - Get file content
+- `figma/files/export` - Export file content
+- `figma/files/versions` - Get file versions
+
+### Components
+- `figma/components/get` - Get component information
+- `figma/team/components` - Get team components
+
+### Comments
+- `figma/comments/get` - Get file comments
+- `figma/comments/post` - Create a comment
+
+## Contributing
+
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 ## License
 
