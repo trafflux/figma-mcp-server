@@ -10,18 +10,39 @@ export const ResourceSchema = z.object({
   metadata: z.record(z.any()).optional()
 });
 
+export const ListResourcesRequestSchema = z.object({
+  method: z.literal('resources/list')
+});
+
 export const ListResourcesResponseSchema = z.object({
   resources: z.array(ResourceSchema)
 });
 
 export const ReadResourceRequestSchema = z.object({
-  uri: FigmaUriSchema
+  method: z.literal('resources/read'),
+  params: z.object({
+    uri: FigmaUriSchema
+  })
+});
+
+export const ReadResourceResponseSchema = z.object({
+  contents: z.array(z.object({
+    uri: z.string(),
+    mimeType: z.string(),
+    text: z.string()
+  }))
 });
 
 export const SearchResourcesRequestSchema = z.object({
-  query: z.string()
+  method: z.literal('resources/search'),
+  params: z.object({
+    query: z.string()
+  })
 });
 
 export const WatchResourceRequestSchema = z.object({
-  uri: FigmaUriSchema
+  method: z.literal('resources/watch'),
+  params: z.object({
+    uri: FigmaUriSchema
+  })
 });

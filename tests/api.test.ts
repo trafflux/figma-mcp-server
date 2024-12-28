@@ -1,11 +1,11 @@
-import { z } from 'zod';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { FigmaResourceHandler } from '../src/handlers/figma.js';
 import {
+  ListResourcesRequestSchema,
   ListResourcesResponseSchema,
   ReadResourceRequestSchema,
-  ResourceSchema
+  ReadResourceResponseSchema
 } from '../src/schemas.js';
 
 describe('Figma MCP Server', () => {
@@ -22,17 +22,12 @@ describe('Figma MCP Server', () => {
     );
 
     // Register handlers
-    server.setRequestHandler(z.object({
-      method: z.literal('resources/list')
-    }), async () => {
+    server.setRequestHandler(ListResourcesRequestSchema, async () => {
       const resources = await handler.list();
       return { resources };
     });
 
-    server.setRequestHandler(z.object({
-      method: z.literal('resources/read'),
-      params: ReadResourceRequestSchema
-    }), async (request) => {
+    server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
       const contents = await handler.read(request.params.uri);
       return { contents };
     });
@@ -53,9 +48,6 @@ describe('Figma MCP Server', () => {
 
       expect(response).toHaveProperty('resources');
       expect(Array.isArray(response.resources)).toBe(true);
-      response.resources.forEach(resource => {
-        expect(() => ResourceSchema.parse(resource)).not.toThrow();
-      });
     });
   });
 
@@ -66,13 +58,7 @@ describe('Figma MCP Server', () => {
           method: 'resources/read',
           params: { uri: 'figma:///file/mock-key' }
         },
-        z.object({
-          contents: z.array(z.object({
-            uri: z.string(),
-            mimeType: z.string(),
-            text: z.string()
-          }))
-        })
+        ReadResourceResponseSchema
       );
 
       expect(response).toHaveProperty('contents');
@@ -86,13 +72,7 @@ describe('Figma MCP Server', () => {
             method: 'resources/read',
             params: { uri: 'invalid-uri' }
           },
-          z.object({
-            contents: z.array(z.object({
-              uri: z.string(),
-              mimeType: z.string(),
-              text: z.string()
-            }))
-          })
+          ReadResourceResponseSchema
         )
       ).rejects.toThrow();
     });
