@@ -7,16 +7,29 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts"
+    "dev": "ts-node src/index.ts",
+    "test": "ts-node tests/api.test.ts",
+    "test:watch": "ts-node-dev --respawn tests/api.test.ts",
+    "examples": "ts-node tests/examples.ts"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^0.1.0",
+    "@modelcontextprotocol/sdk": "^1.0.4",
     "axios": "^1.6.2",
     "dotenv": "^16.3.1"
   },
   "devDependencies": {
     "@types/node": "^20.10.4",
     "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3"
+  },
+  "overrides": {
+    "glob": "^9.0.0",
+    "rimraf": "^5.0.0"
+  },
+  "resolutions": {
+    "glob": "^9.0.0",
+    "rimraf": "^5.0.0",
+    "inflight": "^2.0.0"
   }
 }
