@@ -62,12 +62,27 @@ npm install
 npm run start
 ```
 
+### Using as an MCP Server
+
+The server implements the Model Context Protocol, making it compatible with any MCP client. It supports both stdio and SSE transports:
+
+#### stdio Transport
+```bash
+figma-mcp-server < input.jsonl > output.jsonl
+```
+
+#### SSE Transport
+```bash
+figma-mcp-server --transport sse --port 3000
+```
+
 ### Client Integration
 
 ```typescript
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
+// Initialize the client
 const transport = new StdioClientTransport({
   command: "path/to/figma-mcp-server",
 });
@@ -76,7 +91,9 @@ const client = new Client({
   name: "figma-client",
   version: "1.0.0",
 }, {
-  capabilities: {}
+  capabilities: {
+    resources: {} // Enable resources capability
+  }
 });
 
 await client.connect(transport);
@@ -97,6 +114,24 @@ const fileContent = await client.request(
   },
   ReadResourceResultSchema
 );
+
+// Watch for file changes
+const watcher = await client.request(
+  {
+    method: "resources/watch",
+    params: {
+      uri: "figma:///file/key"
+    }
+  },
+  WatchResourceResultSchema
+);
+
+// Handle resource updates
+client.on("notification", (notification) => {
+  if (notification.method === "resources/changed") {
+    console.log("Resource changed:", notification.params);
+  }
+});
 ```
 
 ## Resource URIs
@@ -106,6 +141,19 @@ The server implements a custom `figma:///` URI scheme for accessing Figma resour
 - Files: `figma:///file/{file_key}`
 - Components: `figma:///component/{file_key}/{component_id}`
 - Variables: `figma:///variable/{file_key}/{variable_id}`
+- Styles: `figma:///style/{file_key}/{style_id}`
+- Teams: `figma:///team/{team_id}`
+- Projects: `figma:///project/{project_id}`
+
+## Supported Operations
+
+The server implements the following MCP operations:
+
+- `resources/list`: List available Figma resources
+- `resources/read`: Read content of Figma resources
+- `resources/watch`: Watch for resource changes
+- `resources/search`: Search across Figma resources
+- `resources/metadata`: Get metadata about resources
 
 ## Development
 
@@ -138,6 +186,30 @@ npm test
 - [ ] Add rate limiting
 - [ ] Enhance documentation
 - [ ] Set up CI/CD pipeline
+- [ ] Add WebSocket transport support
+- [ ] Implement resource change notifications
+- [ ] Add plugin system for custom resource handlers
+
+## Debugging
+
+Enable debug logging by setting the DEBUG environment variable:
+
+```bash
+DEBUG=figma-mcp:* npm start
+```
+
+## Error Handling
+
+The server implements standard MCP error codes:
+
+- `-32700`: Parse error
+- `-32600`: Invalid request
+- `-32601`: Method not found
+- `-32602`: Invalid parameters
+- `-32603`: Internal error
+- `100`: Resource not found
+- `101`: Resource access denied
+- `102`: Resource temporarily unavailable
 
 ## License
 
@@ -148,3 +220,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Model Context Protocol Documentation](https://modelcontextprotocol.io)
 - [MCP Specification](https://spec.modelcontextprotocol.io)
 - [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
+- [Figma API Documentation](https://www.figma.com/developers/api)
