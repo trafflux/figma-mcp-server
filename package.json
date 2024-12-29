@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/.bin/jest --detectOpenHandles"
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --detectOpenHandles",
+    "start": "node dist/index.js",
+    "build": "tsc"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "latest",
@@ -15,6 +17,7 @@
     "@types/node": "^18.15.0",
     "jest": "^29.5.0",
     "ts-jest": "^29.1.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "@types/axios": "^0.14.0"
   }
 }
