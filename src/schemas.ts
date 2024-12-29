@@ -1,65 +1,34 @@
 import { z } from 'zod';
 
-export const FigmaUriSchema = z.string().regex(/^figma:\/\/\/(file|component|variable)\/[\w-]+(\/[\w-]+)?$/);
-
-export const ResourceSchema = z.object({
-  uri: FigmaUriSchema,
-  type: z.enum(['file', 'component', 'variable']),
-  name: z.string(),
-  description: z.string().optional(),
-  metadata: z.record(z.any()).optional()
+export const fileIdSchema = z.object({
+    method: z.literal('figma/files/get'),
+    params: z.object({
+        fileId: z.string()
+    })
 });
 
-const BaseRequestSchema = z.object({
-  jsonrpc: z.literal('2.0'),
-  id: z.string().optional(),
+export const fileExportSchema = z.object({
+    method: z.literal('figma/files/export'),
+    params: z.object({
+        fileId: z.string(),
+        format: z.string().optional(),
+        scale: z.number().optional()
+    })
 });
 
-export const ListResourcesRequestSchema = BaseRequestSchema.extend({
-  method: z.literal('resources/list'),
+export const componentSchema = z.object({
+    method: z.literal('figma/components/get'),
+    params: z.object({
+        fileId: z.string(),
+        nodeId: z.string()
+    })
 });
 
-export const ListResourcesResponseSchema = z.object({
-  resources: z.array(ResourceSchema)
+export const teamComponentsSchema = z.object({
+    method: z.literal('figma/team/components'),
+    params: z.object({
+        teamId: z.string()
+    })
 });
 
-export const ReadResourceRequestSchema = BaseRequestSchema.extend({
-  method: z.literal('resources/read'),
-  params: z.object({
-    uri: FigmaUriSchema
-  })
-});
-
-export const ReadResourceResponseSchema = z.object({
-  contents: z.array(z.object({
-    uri: z.string(),
-    mimeType: z.string(),
-    text: z.string()
-  }))
-});
-
-export const SearchResourcesRequestSchema = BaseRequestSchema.extend({
-  method: z.literal('resources/search'),
-  params: z.object({
-    query: z.string()
-  })
-});
-
-export const WatchResourceRequestSchema = BaseRequestSchema.extend({
-  method: z.literal('resources/watch'),
-  params: z.object({
-    uri: FigmaUriSchema
-  })
-});
-
-// Handler request types
-export const ListResourcesHandlerSchema = z.object({
-  method: z.literal('resources/list')
-});
-
-export const ReadResourceHandlerSchema = z.object({
-  method: z.literal('resources/read'),
-  params: z.object({
-    uri: FigmaUriSchema
-  })
-});
+// Add other schemas here for each endpoint
