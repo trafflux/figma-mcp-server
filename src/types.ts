@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ResourceContents } from '@modelcontextprotocol/sdk/types';
+import { ResourceContents } from '@modelcontextprotocol/sdk/types.js';
 
 export type FigmaFile = {
   key: string;

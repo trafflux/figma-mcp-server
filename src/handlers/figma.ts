@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import debug from 'debug';
-import { ResourceContents } from '@modelcontextprotocol/sdk/types';
+import { ResourceContents } from '@modelcontextprotocol/sdk/types.js';
 
 import { ResourceHandler, FigmaResource } from '../types.js';
 import { validateUri } from '../middleware/auth.js';

@@ -12,7 +12,6 @@ This server provides MCP-compliant access to Figma resources, allowing LLM appli
   - Figma files access and manipulation
   - Variables and components management
   - Custom URI scheme (figma:///)
-  
 - **Robust Implementation**
   - Type-safe implementation using TypeScript
   - Request validation using Zod schemas
@@ -43,14 +42,38 @@ figma-mcp-server/
 
 ## Installation
 
+### Local Installation
+
 ```bash
 npm install @modelcontextprotocol/sdk
 npm install
 ```
 
+### Docker Installation
+
+```bash
+# Build the Docker image
+docker build -t mcp/figma-mcp-server .
+
+# Run the container with your Figma access token
+docker run -i --rm -e FIGMA_ACCESS_TOKEN=your_access_token mcp/figma-mcp-server
+```
+
+## Cline Usage
+
+```json
+  "figma-mcp-server": {
+    "command": "docker",
+    "args": ["run", "-i", "--rm", "-e", "FIGMA_ACCESS_TOKEN=your_access_token", "mcp/figma-mcp-server"],
+    "disabled": false,
+    "autoApprove": []
+  }
+```
+
 ## Configuration
 
 1. Set up your Figma access token:
+
    ```bash
    export FIGMA_ACCESS_TOKEN=your_access_token
    ```
@@ -76,11 +99,13 @@ npm run start
 The server implements the Model Context Protocol, making it compatible with any MCP client. It supports both stdio and SSE transports:
 
 #### stdio Transport
+
 ```bash
 figma-mcp-server < input.jsonl > output.jsonl
 ```
 
 #### SSE Transport
+
 ```bash
 figma-mcp-server --transport sse --port 3000
 ```
@@ -96,14 +121,17 @@ const transport = new StdioClientTransport({
   command: "path/to/figma-mcp-server",
 });
 
-const client = new Client({
-  name: "figma-client",
-  version: "1.0.0",
-}, {
-  capabilities: {
-    resources: {} // Enable resources capability
+const client = new Client(
+  {
+    name: "figma-client",
+    version: "1.0.0",
+  },
+  {
+    capabilities: {
+      resources: {}, // Enable resources capability
+    },
   }
-});
+);
 
 await client.connect(transport);
 
@@ -128,6 +156,7 @@ The server implements a custom `figma:///` URI scheme for accessing Figma resour
 ## Error Handling
 
 ### MCP Protocol Errors
+
 - `-32700`: Parse error
 - `-32600`: Invalid request
 - `-32601`: Method not found
@@ -135,14 +164,17 @@ The server implements a custom `figma:///` URI scheme for accessing Figma resour
 - `-32603`: Internal error
 
 ### Resource Errors
+
 - `100`: Resource not found
 - `101`: Resource access denied
 - `102`: Resource temporarily unavailable
 
 ### Figma API Errors
+
 The server handles Figma API errors and maps them to appropriate MCP error codes:
 
 - `403 Forbidden`: Maps to error code 101 (Resource access denied)
+
   ```json
   {
     "code": 101,
@@ -154,6 +186,7 @@ The server handles Figma API errors and maps them to appropriate MCP error codes
   ```
 
 - `404 Not Found`: Maps to error code 100 (Resource not found)
+
   ```json
   {
     "code": 100,
@@ -185,6 +218,7 @@ The server implements smart rate limiting to prevent hitting Figma API limits:
 - Rate limit status endpoint: `GET /rate-limit-status`
 
 Rate limit headers are included in responses:
+
 ```http
 X-RateLimit-Limit: 500
 X-RateLimit-Remaining: 486
@@ -217,6 +251,7 @@ npm test
 ## Current Status and Roadmap
 
 ### Implemented Features
+
 - [x] Basic MCP server implementation
 - [x] File resource handling
 - [x] Component resource handling
@@ -227,6 +262,7 @@ npm test
 - [x] Basic test coverage
 
 ### Upcoming Features
+
 - [ ] WebSocket transport support (In Progress)
 - [ ] Resource change notifications
 - [ ] Caching layer implementation
@@ -245,6 +281,7 @@ DEBUG=figma-mcp:* npm start
 ```
 
 Debug namespaces:
+
 - `figma-mcp:server`: Server operations
 - `figma-mcp:handler`: Resource handlers
 - `figma-mcp:api`: Figma API calls
