@@ -3,6 +3,7 @@
 A TypeScript server implementing the [Model Context Protocol (MCP)](https://modelcontextprotocol.io) for the Figma API, enabling standardized context provision for LLMs.
 
 ## Overview
+Fixed several issues with original version. STDIO now functional usable via docker. Included working Dockerfile.
 
 This server provides MCP-compliant access to Figma resources, allowing LLM applications to seamlessly integrate with Figma files, components, and variables. It implements the full MCP specification while providing specialized handlers for Figma's unique resource types.
 
